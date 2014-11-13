@@ -134,6 +134,14 @@ describe Marketo do
         response.should == test_values
       end
 
+      it "should sync single lead and return array as result" do
+        single_user = [{ "Email" => "admin@backupify.org", "FirstName" => "Reed", "LastName" => "Richards" }]
+        test_value = [{:lead_id=>"1000085", :status=>"UPDATED", :error=>nil}]
+
+        response = @interface.sync_multiple single_user
+        response.should == test_value
+      end
+
       it "should raise exception if empty array is passed" do
         err_text = "Empty leads hash, nothing to sync"
         lambda { @interface.sync_multiple(nil) }.should raise_exception(Exception, err_text)
@@ -155,6 +163,20 @@ describe Marketo do
         first_timestamp.should_not == second_timestamp
 
         Timecop.return
+      end
+    end
+
+    describe 'normalize_response' do
+      it 'should return array if response is array' do
+        response = [{:lead => 12345, :status => 'UPDATED', :error => nil},
+                    {:lead => 12346, :status => 'SKIPPED', :error => 'Not uniq'}]
+
+        @interface.send(:normalize_response, response).should == response
+      end
+
+      it 'should return one element array if response is hash' do
+        response = {:lead => 12345, :status => 'UPDATED', :error => nil}
+        @interface.send(:normalize_response, response).should == [response]
       end
     end
   end
